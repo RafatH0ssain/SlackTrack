@@ -11,6 +11,9 @@ import threading  # Import threading for background tasks
 # Initialize pygame mixer for sound
 pygame.mixer.init()
 
+# Global variable to control window tracking
+window_tracking_active = False
+
 # Function to play the preview of the selected beep sound
 def play_preview_beep():
     beep_file = selected_beep.get()  # Get the selected beep file from the dropdown
@@ -83,35 +86,49 @@ def launch_camera():
             # Check if the window was closed
             if cv2.getWindowProperty('Camera', cv2.WND_PROP_VISIBLE) < 1:
                 break
-
+            
         cap.release()
         cv2.destroyAllWindows()
 
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
+        
 
 # Function to track window switches
 def track_window_switch():
-    decision = int(window_changed_beep.get())
-    selected_beep_sound = selected_beep.get()
-    last_window = None  # Store the last active window's title
-    beep_sound = pygame.mixer.Sound(f'sounds/{selected_beep_sound}')
+    global window_tracking_active
+    last_window = None
+    beep_sound = pygame.mixer.Sound(f'sounds/{selected_beep.get()}')
 
-    while decision:
-        # Get the title of the current active window
+    while window_tracking_active:  # Check the global flag
         current_window = gw.getActiveWindow()
 
-        # If there's an active window
         if current_window:
             current_window_title = current_window.title
 
-            # If the active window is different from the last one
             if current_window_title != last_window:
                 beep_sound.play()
                 last_window = current_window_title
 
-        # Sleep for a short time before checking again
         time.sleep(0.5)
+
+# Function to start window change tracking based on user input
+def start_window_tracking():
+    global window_tracking_active
+    window_tracking_enabled = bool(int(window_changed_beep.get()))  # Convert to boolean
+    
+    if window_tracking_enabled:
+        window_tracking_active = True  # Set flag to True to start tracking
+        tracking_thread = threading.Thread(target=track_window_switch, daemon=True)
+        tracking_thread.start()
+    else:
+        messagebox.showinfo("Info", "Window tracking is disabled. Set 'Beep If Window Changed' to 1 to enable tracking.")
+
+# Function to stop window change tracking
+def stop_window_tracking():
+    global window_tracking_active
+    window_tracking_active = False  # Set flag to False to stop tracking
+    messagebox.showinfo("Info", "Window tracking has been stopped.")
 
 # Create the Tkinter window
 root = tk.Tk()
@@ -122,17 +139,16 @@ root.title("SlackTrack")
 # blink_threshold_entry.grid(row=0, column=1, padx=10, pady=10)
 # blink_threshold_entry.insert(0, "∞")
 
-
 # Create and place the labels, entries, and button for the GUI
 tk.Label(root, text="Look Away Threshold (seconds):").grid(row=0, column=0, padx=10, pady=10)
 look_away_threshold_entry = tk.Entry(root)
-look_away_threshold_entry.grid(row=0, column=1, padx=10, pady=10)
+look_away_threshold_entry.grid(row=0, column=1, columnspan=3, padx=10, pady=10)
 look_away_threshold_entry.insert(0, "10")
 
 # Create and place the labels, entries, and button for the GUI
 tk.Label(root, text="Beep If Window Changed (0/1):").grid(row=1, column=0, padx=10, pady=10)
 window_changed_beep = tk.Entry(root)
-window_changed_beep.grid(row=1, column=1, padx=10, pady=10)
+window_changed_beep.grid(row=1, column=1, columnspan=3, padx=10, pady=10)
 window_changed_beep.insert(0, "0")
 
 # Label and ComboBox for beep selection
@@ -150,13 +166,13 @@ play_button.grid(row=2, column=2, pady=10, padx=10)
 launch_button = tk.Button(root, text="Launch Camera", command=launch_camera)
 launch_button.grid(row=3, columnspan=2, pady=20)
 
-# Start window tracking in a separate thread
-def start_window_tracking():
-    tracking_thread = threading.Thread(target=track_window_switch, daemon=True)
-    tracking_thread.start()
+# Button to start window change tracking
+start_tracking_button = tk.Button(root, text="Start Window Tracking", command=start_window_tracking)
+start_tracking_button.grid(row=4, columnspan=2, pady=10)
 
-# Start the window tracking as a background thread when the app starts
-start_window_tracking()
+# Button to stop window change tracking
+stop_tracking_button = tk.Button(root, text="Stop Window Tracking", command=stop_window_tracking)
+stop_tracking_button.grid(row=5, columnspan=2, pady=10)
 
 # Run the Tkinter main loop
 root.mainloop()
