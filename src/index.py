@@ -2,8 +2,7 @@ import pygame
 import time
 import cv2
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 import pygetwindow as gw
 import threading  # Import threading for background tasks
@@ -22,6 +21,7 @@ def play_preview_beep():
 
 # Function to launch camera with selected time settings
 def launch_camera():
+    
     try:
         # Get values from user input
         # blink_threshold = int(blink_threshold_entry.get())
@@ -60,9 +60,9 @@ def launch_camera():
                 eyes = eye_cascade.detectMultiScale(roi_gray)
 
                 # Draw rectangle around face and eyes
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Blue for face
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 0), 2)  # White for face
                 for (ex, ey, ew, eh) in eyes:
-                    cv2.rectangle(frame, (x + ex, y + ey), (x + ex + ew, y + ey + eh), (0, 255, 0), 2)  # Green for eyes
+                    cv2.rectangle(frame, (x + ex, y + ey), (x + ex + ew, y + ey + eh), (255, 0, 0), 2)  # Green for eyes
                     eyes_detected = True
 
             if not eyes_detected:
@@ -139,6 +139,12 @@ root.title("SlackTrack")
 # blink_threshold_entry.grid(row=0, column=1, padx=10, pady=10)
 # blink_threshold_entry.insert(0, "∞")
 
+# Set application icon (for .ico files)
+try:
+    root.iconbitmap("src\icons8-widgetsmith.ico")  # Replace with your ICO file path
+except Exception as e:
+    print(f"Error setting application icon: {e}")
+
 # Create and place the labels, entries, and button for the GUI
 tk.Label(root, text="Look Away Threshold (seconds):").grid(row=0, column=0, padx=10, pady=10)
 look_away_threshold_entry = tk.Entry(root)
@@ -173,6 +179,8 @@ start_tracking_button.grid(row=4, columnspan=2, pady=10)
 # Button to stop window change tracking
 stop_tracking_button = tk.Button(root, text="Stop Window Tracking", command=stop_window_tracking)
 stop_tracking_button.grid(row=5, columnspan=2, pady=10)
+
+root.configure(bg='white')
 
 # Run the Tkinter main loop
 root.mainloop()
