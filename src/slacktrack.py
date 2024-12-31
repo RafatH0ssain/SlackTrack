@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 import pygetwindow as gw
-import threading  # Import threading for background tasks
+import threading
 import os
 import sys
 
@@ -27,7 +27,7 @@ def create_image():
 
 def on_quit(icon, item):
     icon.stop()
-    root.quit()  # Exit Tkinter
+    root.quit()
 
 def on_show(icon, item):
     # If the icon is clicked, show the Tkinter window
@@ -35,13 +35,10 @@ def on_show(icon, item):
     icon.stop()
 
 def system_tray():
-    # Create the icon and menu
     icon = pystray.Icon("SlackTrack", create_image(), menu=(
         item("Show", on_show),
         item("Quit", on_quit)
     ))
-
-    # This is necessary to run the system tray icon in the background
     icon.run()
 
 # Initial window setup
@@ -50,57 +47,51 @@ root.title("SlackTrack")
 root.config(bg="black")
 
 # Hide the window on start
-# root.withdraw()
 def on_show(icon, item):
-    root.deiconify()  # Restore the window
-    icon.stop()  # Stop the tray icon thread
+    root.deiconify()
+    icon.stop()
 
 def on_minimize(event=None):
-    root.withdraw()  # Hide the main window
-    system_tray()  # Start the system tray icon (this is already done once)
-    
-root.protocol("WM_DELETE_WINDOW", on_minimize)  # To handle the minimize event
+    root.withdraw()
+    system_tray()
+
+# To handle the minimize event
+root.protocol("WM_DELETE_WINDOW", on_minimize)
 
 # Initialize pygame mixer for sound
 pygame.mixer.init()
 
 # Function to get the correct path to the beep sound
 def get_sound_path(beep_file):
-    if getattr(sys, 'frozen', False):  # Check if running as a bundled executable
-        # If frozen (packaged executable), use the path from _MEIPASS
+    if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, 'sounds', beep_file)
     else:
-        # If not frozen (running as a script), use the local path
         return os.path.join('sounds', beep_file)
 
-# Example function to play a beep sound using pygame.mixer.music for mp3 files
 def play_beep_sound(beep_file):
     beep_path = get_sound_path(beep_file)
     print(f"Beep path: {beep_path}")
-    pygame.mixer.music.load(beep_path)  # For .mp3 or .ogg
+    pygame.mixer.music.load(beep_path)
     pygame.mixer.music.play()
-
-# Initialize pygame mixer for sound
-pygame.mixer.init()
 
 # Global variable to control window tracking
 window_tracking_active = False
 
 # Function to play the preview of the selected beep sound
 def play_preview_beep():
-    beep_file = selected_beep.get()  # Get the selected beep file from the dropdown
-    beep_sound = pygame.mixer.Sound(f'sounds/{beep_file}')  # Load the beep sound
-    beep_sound.play()  # Play the beep sound once
+    beep_file = selected_beep.get()
+    beep_sound = pygame.mixer.Sound(f'sounds/{beep_file}')
+    beep_sound.play()
 
 def get_cascade_path(cascade_file):
     # Get the absolute path of the directory where the current script is located
-    script_dir = os.path.dirname(os.path.realpath(__file__))  # Directory of the current script
+    script_dir = os.path.dirname(os.path.realpath(__file__))
     
     # If the script is frozen (packaged), we use _MEIPASS for accessing bundled files
-    if getattr(sys, 'frozen', False):  # Running as a bundled executable
-        path = os.path.join(sys._MEIPASS, cascade_file)  # Don't add 'src' here
-    else:  # Running as a script
-        path = os.path.join(script_dir,  cascade_file)  # Ensure 'src' is only added here
+    if getattr(sys, 'frozen', False):
+        path = os.path.join(sys._MEIPASS, cascade_file)
+    else:
+        path = os.path.join(script_dir,  cascade_file)
     
     # Check if the path exists
     if not os.path.exists(path):
@@ -112,7 +103,7 @@ def launch_camera():
     try:
         # Get values from user input
         look_away_threshold = int(look_away_threshold_entry.get())
-        selected_beep_sound = selected_beep.get()  # Get the selected beep sound
+        selected_beep_sound = selected_beep.get()
         
         # Initialize camera
         cap = cv2.VideoCapture(0)
@@ -129,11 +120,12 @@ def launch_camera():
 
         # Timer variables
         look_away_time = time.time()
-        last_look_away_beep_time = time.time()  # To track when the beep was last played for look away
+        # To track when the beep was last played for look away
+        last_look_away_beep_time = time.time()
 
         # Load the selected beep sound for the camera
-        beep_path = get_sound_path(selected_beep_sound)  # Get correct path based on execution type
-        beep_sound = pygame.mixer.Sound(beep_path)  # Load sound from the correct path
+        beep_path = get_sound_path(selected_beep_sound)
+        beep_sound = pygame.mixer.Sound(beep_path)
 
         # Camera loop
         while True:
@@ -152,9 +144,9 @@ def launch_camera():
                 eyes = eye_cascade.detectMultiScale(roi_gray)
 
                 # Draw rectangle around face and eyes
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 0), 2)  # White for face
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 0), 2)
                 for (ex, ey, ew, eh) in eyes:
-                    cv2.rectangle(frame, (x + ex, y + ey), (x + ex + ew, y + ey + eh), (255, 0, 0), 2)  # Green for eyes
+                    cv2.rectangle(frame, (x + ex, y + ey), (x + ex + ew, y + ey + eh), (255, 0, 0), 2)
                     eyes_detected = True
 
             if not eyes_detected:
@@ -172,7 +164,7 @@ def launch_camera():
 
             # Wait for the 'Esc' key to exit
             key = cv2.waitKey(1) & 0xFF
-            if key == 27:  # 'Esc' key to exit
+            if key == 27:
                 break
 
             # Check if the window was closed
@@ -191,7 +183,7 @@ def track_window_switch():
     last_window = None
     beep_sound = pygame.mixer.Sound(f'sounds/{selected_beep.get()}')
 
-    while window_tracking_active:  # Check the global flag
+    while window_tracking_active:
         current_window = gw.getActiveWindow()
 
         if current_window:
@@ -206,14 +198,14 @@ def track_window_switch():
 # Function to start window change tracking based on user input
 def start_window_tracking():
     global window_tracking_active
-    window_tracking_active = True  # Set flag to True to start tracking
+    window_tracking_active = True
     tracking_thread = threading.Thread(target=track_window_switch, daemon=True)
     tracking_thread.start()
 
 # Function to stop window change tracking
 def stop_window_tracking():
     global window_tracking_active
-    window_tracking_active = False  # Set flag to False to stop tracking
+    window_tracking_active = False
     messagebox.showinfo("Info", "Window tracking has been stopped.")
 
 # Set the background color for the main window
@@ -226,7 +218,7 @@ except Exception as e:
 
 # Create and place the labels, entries, and button for the GUI
 tk.Label(root, text="Look Away Threshold (seconds):", fg="white", bg="black").grid(row=0, column=0, padx=10, pady=10)
-look_away_threshold_entry = tk.Entry(root, fg="white", bg="black", insertbackground='black')  # White text and cursor
+look_away_threshold_entry = tk.Entry(root, fg="white", bg="black", insertbackground='black')
 look_away_threshold_entry.grid(row=0, column=1, columnspan=3, padx=10, pady=10)
 look_away_threshold_entry.insert(0, "5")
 
@@ -236,15 +228,15 @@ tk.Label(root, text="Select Beep Sound:", fg="white", bg="black").grid(row=1, co
 # Create a ttk Style to customize the Combobox appearance
 style = ttk.Style()
 style.configure("TCombobox",
-                foreground="white",  # Set text color to white
-                background="black",  # Set background color to black
-                fieldbackground="black",  # Set the dropdown field color to black
-                darkcolor="black")  # Set the dark mode background for the combobox
+                foreground="white",
+                background="black",
+                fieldbackground="black",
+                darkcolor="black")
 
 beep_options = ["beep01.mp3", "beep02.mp3", "beep03.mp3", "beep04.mp3", "beep05.mp3", "beep06.mp3", "beep07.mp3"]
 selected_beep = ttk.Combobox(root, values=beep_options, state="readonly", style="TCombobox")
 selected_beep.grid(row=1, column=1, padx=10, pady=10)
-selected_beep.set(beep_options[0])  # Set a default option
+selected_beep.set(beep_options[0])
 
 # Button to preview beep sound
 preview_button = tk.Button(root, text="Preview Beep", fg="white", bg="black", command=play_preview_beep)
