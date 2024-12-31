@@ -101,10 +101,14 @@ def get_cascade_path(cascade_file):
 
 def launch_camera():
     try:
+        # Disable the window tracking buttons
+        start_tracking_button.config(state="disabled")
+        stop_tracking_button.config(state="disabled")
+        
         # Get values from user input
         look_away_threshold = int(look_away_threshold_entry.get())
         selected_beep_sound = selected_beep.get()
-        
+
         # Initialize camera
         cap = cv2.VideoCapture(0)
 
@@ -120,7 +124,6 @@ def launch_camera():
 
         # Timer variables
         look_away_time = time.time()
-        # To track when the beep was last played for look away
         last_look_away_beep_time = time.time()
 
         # Load the selected beep sound for the camera
@@ -170,12 +173,17 @@ def launch_camera():
             # Check if the window was closed
             if cv2.getWindowProperty('Camera', cv2.WND_PROP_VISIBLE) < 1:
                 break
-            
+        
         cap.release()
         cv2.destroyAllWindows()
 
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
+    
+    finally:
+        # Re-enable the window tracking buttons after the camera is stopped
+        start_tracking_button.config(state="normal")
+        stop_tracking_button.config(state="normal")
 
 # Function to track window switches
 def track_window_switch():
